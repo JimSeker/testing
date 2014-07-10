@@ -3,7 +3,6 @@ package edu.cs4730.renamecontacts;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
