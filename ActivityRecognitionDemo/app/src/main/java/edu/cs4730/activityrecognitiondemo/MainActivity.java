@@ -45,7 +45,8 @@ public class MainActivity extends AppCompatActivity implements
     //widgets
     Button btn;
     TextView logger;
-    String TAG= "MainActivity";
+    String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +89,23 @@ public class MainActivity extends AppCompatActivity implements
         mGoogleApiClient.disconnect();
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Register the broadcast receiver that informs this activity of the DetectedActivity
+        // object broadcast sent by the intent service.
+        setupDemo();  //likely always starts (even first use), since it should be turned off by onPause()
+        //should set a preference in OnPause, that is read here as well, to determine if it should be started.
+    }
+
+    @Override
+    protected void onPause() {
+        // Unregister the broadcast receiver that was registered during onResume().
+        if (gettingupdates)  //if turned on, stop them during pause.
+          setupDemo();
+        super.onPause();
+    }
     void setupDemo() {
         if (!mGoogleApiClient.isConnected()) {
             Toast.makeText(this, "Google API is not connected!",
@@ -99,13 +117,16 @@ public class MainActivity extends AppCompatActivity implements
                     mGoogleApiClient,
                     getActivityDetectionPendingIntent()
             ).setResultCallback(this);
+            btn.setText("Start Recognition");
         } else {
             ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
                     mGoogleApiClient,
                     DETECTION_INTERVAL_IN_MILLISECONDS,
                     getActivityDetectionPendingIntent()
             ).setResultCallback(this);
+            btn.setText("Stop Recognition");
         }
+        gettingupdates = !gettingupdates;
     }
 
     /**
@@ -124,8 +145,9 @@ public class MainActivity extends AppCompatActivity implements
     //we want to get the intent back here without starting another instanced
     //so  we get the data here, hopefully.
     @Override
-    protected void onNewIntent (Intent intent) {
+    protected void onNewIntent(Intent intent) {
         Log.v(TAG, "onNewIntent");
+        logger.append("newIntent\n");
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
    /*     for (DetectedActivity da: detectedActivities) {
             Log.i(TAG, Constants.getActivityString(
@@ -139,31 +161,30 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Returns a human readable String corresponding to a detected activity type.
      */
-    /*
+
     public static String getActivityString(Context context, int detectedActivityType) {
-        Resources resources = context.getResources();
-        switch(detectedActivityType) {
+        switch (detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:
-                return resources.getString(R.string.in_vehicle);
+                return "In a Vehicle";
             case DetectedActivity.ON_BICYCLE:
-                return resources.getString(R.string.on_bicycle);
+                return "On a bicycle";
             case DetectedActivity.ON_FOOT:
-                return resources.getString(R.string.on_foot);
+                return "On Foot";
             case DetectedActivity.RUNNING:
-                return resources.getString(R.string.running);
+                return "Running";
             case DetectedActivity.STILL:
-                return resources.getString(R.string.still);
+                return "Still (not moving)";
             case DetectedActivity.TILTING:
-                return resources.getString(R.string.tilting);
+                return "Tilting";
             case DetectedActivity.UNKNOWN:
-                return resources.getString(R.string.unknown);
+                return "Unknown Activity";
             case DetectedActivity.WALKING:
-                return resources.getString(R.string.walking);
+                return "Walking";
             default:
-                return resources.getString(R.string.unidentifiable_activity, detectedActivityType);
+                return "Unknown Type";
         }
     }
-    */
+
     //GoogleAPIClient connection call backs
     @Override
     public void onConnected(Bundle bundle) {
